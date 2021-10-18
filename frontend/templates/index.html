@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang = "en">
+
+<head>
+    <meta charset = "UTF-8">
+    <meta http-equiv = "X-UA-Compatible" content = "IE=edge">
+    <meta name = "viewport" content = "width=device-width, initial-scale=1.0">
+    {% load static %}
+    <link rel = "stylesheet" href = "https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel = "stylesheet" href = "{% static 'style/style.css' %}">
+    <link rel = "stylesheet" type = "text/css" href = "//cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css"/>
+    <link rel = "stylesheet" href = "{% static 'style/font-awesome.min.css' %}">
+    <title>{{ title }}</title>
+</head>
+
+<body>
+<div class = "container">
+    {% include 'Header/header.html' %}
+    <div class = "row justify-content-center">
+        <div class = "col-md-7">
+            <div class="col">
+                {% include "Forms/create-post.html" %}
+            </div>
+        </div>
+        <div class = "col-md-7">
+            <div class = "col">
+                {% load i18n %}
+                {% for post in object_list %}
+                <div class = "card w-100 mb-3">
+                    <div class = "card-header pt-3 pb-3">
+                        <div class = "d-flex justify-content-between">
+                            <div class = "d-flex">
+                                <div>
+                                    <img src = "https://cdn.pixabay.com/photo/2018/04/18/18/56/user-3331256__340.png"
+                                         alt = "{{ post.user.username }}" class = "mr-2"
+                                         style = "width: 25px; height: 25px; object-fit: cover; border-radius: 50%;">
+                                </div>
+                                {{ post.user.username|escape }}
+                            </div>
+                            <div>
+                                {{ post.created_at|timesince|escape }} назад
+                            </div>
+                        </div>
+                    </div>
+                    <div class = "slider">
+                        {% for image in post.images.all %}
+                        <img class = "card-img-top post-list-image" src = "{{ image.image.url }}"
+                             alt = "Card image cap">
+                        {% endfor %}
+                    </div>
+                    <div class = "card-body p-2 pl-3 pt-3">
+                        <a href = "{% url 'post-detail' post.slug %}" style = "color: black;">
+                            <h5 class = "card-title">
+                                {{ post.title|escape }}
+                            </h5>
+                        </a>
+                    </div>
+                    <div class = "card-footer">
+                        <button type = "button" class = "btn m-0" id = "post-{{ post.slug }}-like">
+                            <i class = "fa fa-heart"></i>
+                        </button>
+                        <label for = "post-{{ post.slug }}-like">
+                            49к
+                        </label>
+                        <button type = "button" class = "btn m-0" id = "post-{{ post.slug }}-comment">
+                            <i class = "fa fa-comment"></i>
+                        </button>
+                        
+                        <label for = "post-{{ post.slug }}-comment">
+                            {{ post.counter_comments }}
+                        </label>
+                    </div>
+                    <div class = "card-body">
+                        <h3>body</h3>
+                    </div>
+                    <div class = "card-footer">
+                        <h5>footer</h5>
+                    </div>
+                </div>
+                {% empty %}
+                <h2 class = "mt-4 mb-4">No publications</h2>
+                {% endfor %}
+            </div>
+            <div class="pagination">
+                <span class="step-links">
+                    {% if page_obj.has_previous %}
+                        <a href="?page=1">&laquo; first</a>
+                        <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+                    {% endif %}
+            
+                    <span class="current">
+                        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                    </span>
+            
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}">next</a>
+                        <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+<footer class = "footer bg-dark pt-5 pb-5">
+    <div class = "container">
+        <span class = "text-muted">Footer</span>
+    </div>
+</footer>
+</body>
+{% load static %}
+<script src = "{% static "ckeditor/ckeditor-init.js" %}"></script>
+<script src="{% static "ckeditor/ckeditor/ckeditor.js" %}"></script>
+<script src = "https://code.jquery.com/git/jquery-3.x-git.slim.min.js"></script>
+
+<script type = "text/javascript" src = "//cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
+<script type = "text/javascript">
+    $(document).ready(function () {
+        $('.slider').slick({
+            dots: true,
+            prevArrow: '<button id="prev" type="button" class="btn-slider btn btn-juliet"><i class="fa fa-chevron-left" aria-hidden="true"></i></button>',
+            nextArrow: '<button id="next" type="button" class="btn-slider btn btn-juliet"><i class="fa fa-chevron-right" aria-hidden="true"></i></button>'
+        });
+    })
+</script>
+
+<script type = "text/javascript">
+    $(document).ready(function() {
+        $("#multiple-image-post").change(function () {
+            readURL(this);
+        });
+    });
+    function readURL(input) {
+        if (input.files && input.files[0]) {
+            let i;
+            $('#preview-img-file').html('')
+            for (i = 0; i < input.files.length; ++i) {
+                let reader = new FileReader();
+                reader.onload = function (e) {
+                    $('#preview-img-file').append('<img class="item-file-review" src="' + e.target.result + '">');
+                }
+                reader.readAsDataURL(input.files[i]);
+            }
+        }
+    }
+</script>
+
+<script>
+    let form = document.getElementById("form");
+    form.addEventListener("submit", async function (e) {
+        e.preventDefault();
+        let response = await fetch("{% url 'post-create' %}", {
+            method: this.getAttribute('method'),
+            body: new FormData(this),
+            cache: 'no-cache',
+            headers: {
+                "X-Requested-With": "XMLHttpRequest"
+            },
+        });
+        console.log(response)
+        if (response.ok) {
+            alert('Успех!');
+            window.location.href = window.location.href;
+        } else {
+            let errors = await response.json();
+            errors = JSON.parse(errors.errors);
+            console.log(errors)
+            document.querySelectorAll('.errors').forEach(el => el.remove());
+
+            for (let name in errors) {
+                for (let i in errors[name]) {
+                    let input = document.querySelector(`[name='${name}'`);
+                    let errEl = document.createElement("div");
+                    errEl.className = "errors alert alert-danger";
+                    errEl.innerHTML = errors[name][i];
+                    if (input.name === "body") {
+                        document.querySelector(".django-ckeditor-widget").insertAdjacentHTML(
+                            "afterend", errEl.outerHTML
+                        );                        
+                    } else {
+                        input.insertAdjacentHTML("afterend", errEl.outerHTML);
+                    }
+                }
+            }
+        }
+    })
+</script>
+
+</html>

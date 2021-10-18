@@ -1,0 +1,73 @@
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}" role="alert">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+<form action="{% url 'post-create' %}" method="POST" enctype="multipart/form-data" class="w-100 mb-5" id="form">
+    {% csrf_token %}
+    {% if form.errors %}
+        {% for field in form %}
+            {% for error in field.errors %}
+                <div class="alert alert-danger">
+                    <strong>{{ error|escape }}</strong>
+                </div>
+            {% endfor %}
+        {% endfor %}
+        {% for error in form.non_field_errors %}
+            <div class="alert alert-danger">
+                <strong>{{ error|escape }}</strong>
+            </div>
+        {% endfor %}
+    {% endif %}
+    <div class="form-group">
+        <label for="{{ form.title.id_for_label }}" class="card-header w-100">
+            {{ form.title.label }}
+        </label>
+        {{ form.title }}
+        {% for error in form.title.errors %}
+            <div class="alert alert-danger" role="alert">
+                {{ error }}
+            </div>
+        {% endfor %}
+    </div>
+    <div class="form-group">
+        {{ form.media }}
+        {{ form.body }}
+    </div>
+    <div class="form-group position-relative">
+        <div class="disabled-field">
+
+        </div>
+        <label for="{{ form.images.id_for_label }}" class="card-header w-100 image-field-custom">
+            {{ form.images.label }}
+        </label>
+        {{ form.images }}
+        <div id="preview-img-file"></div>
+        {% for error in form.images.errors %}
+            {{ error }}
+        {% endfor %}
+    </div>
+    <div class="form-group">
+        <div class="custom-control custom-switch mb-2">
+            {{ form.is_active }}
+            <label for="{{ form.is_active.id_for_label }}" class="custom-control-label">
+                {{ form.is_active.label }}
+            </label>
+        </div>
+        <div class="custom-control custom-switch mb-2">
+            {{ form.commentable }}
+            <label for="{{ form.commentable.id_for_label }}" class="custom-control-label">
+                {{form.commentable.label }}
+            </label>
+        </div>
+        <div class="custom-control custom-switch">
+            {{ form.private_mode }}
+            <label for="{{ form.private_mode.id_for_label }}" class="custom-control-label">
+                {{ form.private_mode.label }}
+            </label>
+        </div>
+    </div>
+    <button type="submit" class="btn btn-success">Сохранить</button>
+</form>
